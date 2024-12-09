@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../task/loginPage';
-import { ProductsPage } from '../task/productsPage';
-import { CartPage } from '../task/cartsPage';
-import { CheckoutPage } from '../task/checkoutPage';
+import { test } from '@playwright/test';
+import { LoginPage } from '../pages/loginPage';
+import { ProductsPage } from '../pages/productsPage';
+import { CartPage } from '../pages/cartsPage';
+import { CheckoutPage } from '../pages/checkoutPage';
 
 test.describe('Sauce Demo Site Automation', () => {
   test('Standard user checkout flow', async ({ page }) => {

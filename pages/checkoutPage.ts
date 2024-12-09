@@ -30,8 +30,7 @@ export class CheckoutPage {
   }
 
   async verifyItemTotal(expectedTotal: string): Promise<void> {
-    const itemTotal = await this.page.locator('.summary_subtotal_label').textContent();
-    await expect(itemTotal).toContain(expectedTotal);
+    await expect(this.page.locator('.summary_subtotal_label')).toContainText(expectedTotal);
   }
 
   async finishCheckout(): Promise<void> {
