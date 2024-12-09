@@ -1,24 +1,27 @@
-import { expect, Page } from '@playwright/test';
+import { expect, Page, Locator } from '@playwright/test';
 
 export class ProductsPage {
   private page: Page;
-  private inventoryContainer;
-  private productSortDropdown ;
-  private cartBadge;
+  inventoryContainer: () => Locator;
+  productSortDropdown: () => Locator;
+  cartBadge: () => Locator;
+  productItem: (itemName: string) => Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.inventoryContainer = this.page.locator('#inventory_container');
-    this.productSortDropdown = this.page.locator('.product_sort_container');
-    this.cartBadge = this.page.locator('.shopping_cart_badge');
+    this.inventoryContainer = () => this.page.locator('#inventory_container');
+    this.productSortDropdown = () => this.page.locator('.product_sort_container');
+    this.cartBadge = () => this.page.locator('.shopping_cart_badge');
+    this.productItem = (itemName: string) => 
+      this.page.locator(`text=${itemName}`).locator('xpath=ancestor::div[contains(@class,"inventory_item")]');
   }
 
   async verifyOnProductsPage(): Promise<void> {
-    await expect(this.inventoryContainer.first()).toBeVisible();
+    await expect(this.inventoryContainer().first()).toBeVisible();
   }
 
   async sortByPriceLowToHigh(): Promise<void> {
-    await this.productSortDropdown.selectOption({ label: 'Price (low to high)' });
+    await this.productSortDropdown().selectOption({ label: 'Price (low to high)' });
   }
 
   async verifySortedByPrice(): Promise<void> {
@@ -29,16 +32,15 @@ export class ProductsPage {
   }
 
   async addItemToCart(itemName: string): Promise<void> {
-    const item = this.page.locator(`text=${itemName}`).locator('xpath=ancestor::div[contains(@class,"inventory_item")]');
-    await item.locator('button:has-text("Add to cart")').click();
+    await this.productItem(itemName).locator('button:has-text("Add to cart")').click();
   }
 
   async verifyCartCount(expectedCount: number): Promise<void> {
-    await expect(this.cartBadge).toHaveText(String(expectedCount));
+    await expect(this.cartBadge()).toHaveText(String(expectedCount));
   }
 
   async getProductDetails(itemName: string): Promise<{ name: string, price: string }> {
-    const item = this.page.locator(`text=${itemName}`).locator('xpath=ancestor::div[contains(@class,"inventory_item")]');
+    const item = this.productItem(itemName);
     const name = await item.locator('.inventory_item_name').textContent();
     const price = await item.locator('.inventory_item_price').textContent();
     return { name: name!, price: price! };
