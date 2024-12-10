@@ -4,23 +4,21 @@ export class CartPage {
   private page: Page;
   cartItems: () => Locator;
   continueShoppingButton: () => Locator;
-  cartItem: (itemName: string) => Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.cartItems = () => this.page.locator('.cart_item');
-    this.continueShoppingButton = () => this.page.locator('button:has-text("Continue Shopping")');
-    this.cartItem = (itemName: string) => this.page.locator(`.cart_item:has-text("${itemName}")`);
+    this.continueShoppingButton = () => this.page.locator('button').filter({hasText : "Continue Shopping"});
   }
 
   async verifyProductInCart(productDetails: { name: string, price: string }): Promise<void> {
-    const cartItemLocator = this.cartItem(productDetails.name);
+    const cartItemLocator = this.cartItems().filter({hasText : `${productDetails.name}`});
     await expect(cartItemLocator.locator('.inventory_item_name')).toHaveText(productDetails.name);
     await expect(cartItemLocator.locator('.inventory_item_price')).toHaveText(productDetails.price);
   }
 
   async removeProductFromCart(itemName: string): Promise<void> {
-    const cartItemLocator = this.cartItem(itemName);
+    const cartItemLocator = this.cartItems().filter({hasText : `${itemName}`});
     await cartItemLocator.locator('button:has-text("Remove")').click();
   }
 
