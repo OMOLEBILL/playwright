@@ -1,24 +1,29 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, Locator} from '@playwright/test';
+import { faker } from '@faker-js/faker';
+import { FamilyData } from './types';
 
 export class GeneralPage {
     readonly page: Page;
-    readonly incomeRangeSliderStart: Locator;
-    readonly incomeRangeSliderEnd: Locator;
+    readonly slider: Locator;
     readonly familyCards: Locator;
     readonly spinner: Locator;
     readonly subscribe: Locator;
-    slider : Locator;
 
 
     constructor(page: Page) {
       this.page = page;
       this.slider = page.locator('button.Slider_Handle__YniwT');
       this.familyCards = page.locator('.Media_Container__l2PkG');
-  
       this.spinner = page.locator('.Loader_Loader__1CIF_');
-      this.subscribe= page.getByRole('button', { name: 'Maybe later' });
+      this.subscribe = page.getByRole('button', { name: 'Maybe later' });
     }
 
+    async waitForAPIResponse(): Promise<void> {
+      await this.page.waitForResponse(
+        (response) =>
+          response.url().includes('/v1/search/families') && response.status() === 200
+      );
+    }
 
     async navigate() {
       await this.page.goto('https://www.gapminder.org/dollar-street');
@@ -55,26 +60,26 @@ export class GeneralPage {
       await this.page.mouse.down();
       await this.page.mouse.move(targetX, targetY, { steps: 20 });
       await this.page.mouse.up();
-    
-      // Wait for spinner to disappear
-      await this.page.waitForTimeout(500);
+  
+      //await for the data to be loaded in the page
+      await this.waitForAPIResponse()
     }
 
-    async selectRandomFamily() {
-      const total = await this.familyCards.count()
-      const randomIndex = Math.floor(Math.random() * total);
+    async selectRandomFamily(): Promise<FamilyData> {
+      const total = await this.familyCards.count();
+      const randomIndex = faker.number.int({ min: 0, max: total - 1 });
+  
       const selectedFamily = this.familyCards.nth(randomIndex);
-      const relevantInfo = selectedFamily.locator('.Media_Label__SWsj_.Media_hasVideoButton__16k20');
-
       await selectedFamily.scrollIntoViewIfNeeded();
   
-      const income = await relevantInfo.locator('span').nth(0).textContent();
+      const income = await selectedFamily.locator('.Media_Label__SWsj_ span').nth(0).textContent();
       const residence = await selectedFamily.locator('span').nth(1).textContent();
-      await selectedFamily.click(); 
   
-      return { 
-        income: income?.match(/\d+/)?.[0].trim(), 
-        residence: residence?.trim() 
+      await selectedFamily.click();
+  
+      return {
+        income: income?.match(/\d+/)?.[0].trim() || '',
+        residence: residence?.trim() || '',
       };
     }
   }

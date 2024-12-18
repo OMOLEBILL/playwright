@@ -1,4 +1,5 @@
 import { Page, Locator } from '@playwright/test';
+import { FamilyData } from './types';
 
 export class FamilyPage {
     readonly page: Page;
@@ -10,28 +11,23 @@ export class FamilyPage {
     constructor(page: Page) {
         this.page = page;
         this.incomeField = page.locator('span.mb-0');
-        this.residenceField = page.locator('div.LightboxDesktop_ContentWrapper__1dkjw.d-flex.flex-fill.h-100.w-100')
+        this.residenceField = page.locator('div.LightboxDesktop_ContentWrapper__1dkjw h5');
         this.visitButton = page.getByRole('link', { name: 'Visit this family' });
     }
 
 
-    async getFamilyData() {
+    async getFamilyData(): Promise<FamilyData> {
         const income = await this.incomeField.textContent();
-        const familyInfo = await this.residenceField.locator("h5").textContent();
-        const familyInfoList = familyInfo?.split(",")
-
-        if (!familyInfoList) {
-            throw new Error("Failed to retrieve family information.");
-        }
-
+        const [surname, residence] = (await this.residenceField.textContent())?.split(',') || ['', ''];
+    
         return {
-        income: income?.match(/\d+/)?.[0].trim(),
-        residence: familyInfoList[1].trim(),
-        surname: familyInfoList[0].trim(),
+          income: income?.match(/\d+/)?.[0].trim() || '',
+          residence: residence.trim(),
+          surname: surname.trim(),
         };
     }
 
-    async clickVisitFamily() {
+    async visitFamily() {
         await this.visitButton.click();
     }
 }
