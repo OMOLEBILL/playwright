@@ -1,6 +1,7 @@
 import { Page, Locator} from '@playwright/test';
 import { faker } from '@faker-js/faker';
 import { FamilyData } from './types';
+import { BASE_URL } from '../../env'; 
 
 export class GeneralPage {
     readonly page: Page;
@@ -14,19 +15,12 @@ export class GeneralPage {
       this.page = page;
       this.slider = page.locator('button.Slider_Handle__YniwT');
       this.familyCards = page.locator('.Media_Container__l2PkG');
-      this.spinner = page.locator('.Loader_Loader__1CIF_');
       this.subscribe = page.getByRole('button', { name: 'Maybe later' });
     }
 
-    async waitForAPIResponse(): Promise<void> {
-      await this.page.waitForResponse(
-        (response) =>
-          response.url().includes('/v1/search/families') && response.status() === 200
-      );
-    }
 
     async navigate() {
-      await this.page.goto('https://www.gapminder.org/dollar-street');
+      await this.page.goto(BASE_URL);
       await this.subscribe.click()
     }
 
@@ -54,7 +48,10 @@ export class GeneralPage {
     
       const targetX = sliderTrack.left + valueRatio * sliderWidth;
       const targetY = sliderTrack.top + sliderTrack.height / 2;
-    
+      
+      //wrap the response 
+      const waitForResponse = this.page.waitForResponse(response => response.url().includes('/v1/search/families'));
+
       // Simulate dragging the slider handle to the target position
       await this.page.mouse.move(handleBox.x + handleBox.width / 2, targetY);
       await this.page.mouse.down();
@@ -62,7 +59,7 @@ export class GeneralPage {
       await this.page.mouse.up();
   
       //await for the data to be loaded in the page
-      await this.waitForAPIResponse()
+      await waitForResponse;
     }
 
     async selectRandomFamily(): Promise<FamilyData> {
